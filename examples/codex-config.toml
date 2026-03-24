@@ -1,0 +1,5 @@
+notify = ["agent-notify.cmd", "codex", "auto"]
+
+[tui]
+notifications = true
+notification_method = "auto"
