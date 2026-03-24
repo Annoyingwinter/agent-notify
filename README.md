@@ -1,5 +1,7 @@
 <div align="center">
 
+**[English](README.md)** | **[中文](README_CN.md)**
+
 # agent-notify
 
 ### Stop watching your terminal. Start **vibe coding**.
