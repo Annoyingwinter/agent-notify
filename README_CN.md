@@ -46,7 +46,14 @@ cd agent-notify
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-安装后脚本会被复制到 `%USERPROFILE%\.agent-hooks\`，并提供 `agent-notify.cmd` 入口。
+安装后脚本会被复制到 `%USERPROFILE%\.agent-hooks\`，并把 `agent-notify.cmd` 安装到 `%APPDATA%\npm`。
+
+如果你的用户 `PATH` 里还没有 `%APPDATA%\npm`，安装器会顺手补进去。重开终端后，`agent-notify.cmd` 就可以在任何目录直接调用。
+
+为了让开源后的配置更便携，建议统一这样写：
+
+- 直接用 `agent-notify.cmd`
+- 不要写死本机绝对路径
 
 ## Agent 配置
 
@@ -181,6 +188,7 @@ agent-notify/
 |------|----------|
 | 有声音但没弹窗 | 检查 `%USERPROFILE%\.agent-hooks\wpf-popup.ps1` 是否存在 |
 | 改了 Codex 配置后还是没弹 | 重启 Codex CLI，让它重新加载 `config.toml` |
+| 提示找不到 `agent-notify.cmd` | 重开终端，让新的用户 `PATH` 生效 |
 | Toast 没出现 | WPF 是主弹窗，Toast 只是补充 |
 | 中文乱码 | 重新执行 `install.ps1`，脚本默认强制 UTF-8 |
 

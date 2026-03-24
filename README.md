@@ -46,7 +46,14 @@ cd agent-notify
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-This copies the scripts to `%USERPROFILE%\.agent-hooks\` and exposes `agent-notify.cmd`.
+This copies the scripts to `%USERPROFILE%\.agent-hooks\` and installs `agent-notify.cmd` into `%APPDATA%\npm`.
+
+If `%APPDATA%\npm` is missing from your user `PATH`, the installer adds it for you. After reopening your terminal, `agent-notify.cmd` should work from anywhere.
+
+For portable open-source setups, keep agent configs like this:
+
+- Use `agent-notify.cmd` directly
+- Do not hardcode an absolute local path
 
 ## Agent Setup
 
@@ -181,6 +188,7 @@ agent-notify/
 |-------|-----|
 | Sound works but no popup | Check `%USERPROFILE%\.agent-hooks\wpf-popup.ps1` |
 | No Codex popup after editing config | Restart Codex CLI so it reloads `config.toml` |
+| `agent-notify.cmd` is not found | Reopen the terminal so the updated user `PATH` is loaded |
 | No visible Toast | WPF popup is primary; Toast is only fallback/secondary |
 | Garbled text | Re-run `install.ps1`; scripts force UTF-8 |
 

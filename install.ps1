@@ -7,6 +7,18 @@ $ErrorActionPreference = "Stop"
 $hookDir = Join-Path $env:USERPROFILE ".agent-hooks"
 $npmBin = Join-Path $env:APPDATA "npm"
 
+function Normalize-PathEntry {
+    param(
+        [string] $Value
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $null
+    }
+
+    return $Value.Trim().TrimEnd("\").ToLowerInvariant()
+}
+
 Write-Host "=== agent-notify installer ===" -ForegroundColor Cyan
 Write-Host ""
 
@@ -41,6 +53,40 @@ if (Test-Path $cmdSrc) {
     }
     Copy-Item $cmdSrc (Join-Path $npmBin "agent-notify.cmd") -Force
     Write-Host "[+] Installed agent-notify.cmd -> $npmBin" -ForegroundColor Green
+
+    $normalizedNpmBin = Normalize-PathEntry $npmBin
+    $pathEntries = @()
+
+    foreach ($pathValue in @(
+        [Environment]::GetEnvironmentVariable("Path", "User"),
+        [Environment]::GetEnvironmentVariable("Path", "Machine"),
+        $env:Path
+    )) {
+        if ($pathValue) {
+            $pathEntries += ($pathValue -split ";")
+        }
+    }
+
+    $hasNpmBin = $pathEntries |
+        Where-Object { (Normalize-PathEntry $_) -eq $normalizedNpmBin } |
+        Select-Object -First 1
+
+    if (-not $hasNpmBin) {
+        $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        $newUserPath = if ([string]::IsNullOrWhiteSpace($userPath)) {
+            $npmBin
+        } else {
+            "$userPath;$npmBin"
+        }
+
+        [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
+        $env:Path = "$env:Path;$npmBin"
+
+        Write-Host "[+] Added $npmBin to user PATH" -ForegroundColor Green
+        Write-Host "[!] Restart your terminal so the updated PATH is picked up everywhere" -ForegroundColor Yellow
+    } else {
+        Write-Host "[=] $npmBin is already available on PATH" -ForegroundColor Yellow
+    }
 } else {
     Write-Host "[-] agent-notify.cmd not found, skipped" -ForegroundColor Red
 }
@@ -56,6 +102,7 @@ if (Test-Path $toastScript) {
 # 5. Show Claude Code hook config
 Write-Host ""
 Write-Host "=== Setup complete! ===" -ForegroundColor Green
+Write-Host "Use the global command name in agent configs: agent-notify.cmd" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Add this to your Claude Code settings.json hooks section:" -ForegroundColor Cyan
 Write-Host @'
@@ -82,6 +129,17 @@ Write-Host @'
     ]
   }
 ]
+'@
+
+Write-Host ""
+Write-Host "Add this to your Codex CLI config.toml:" -ForegroundColor Cyan
+Write-Host @'
+
+notify = ["agent-notify.cmd", "codex", "auto"]
+
+[tui]
+notifications = true
+notification_method = "auto"
 '@
 
 Write-Host ""
